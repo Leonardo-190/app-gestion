@@ -1,11 +1,11 @@
-import {view, text} from 'react-native';
+import {View, Text,StyleSheet } from 'react-native';
 import React from 'react';
 
 export default function Inicio() {
     return (    
-        <view style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-            <text>Bienvenido</text>
-        </view>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Text>Bienvenido</Text>
+        </View>
     );
 }
 const styles = StyleSheet.create({
