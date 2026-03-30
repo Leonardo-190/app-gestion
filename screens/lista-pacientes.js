@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, SafeAreaView, StatusBar, Platform, Image } from 'react-native'
 import { useState } from 'react'
+import React from 'react';
 
 const PACIENTES_DATA = [
   { id: '1', nombre: 'Martina Zuniga', edad: 28, diagnostico: 'Control General' },

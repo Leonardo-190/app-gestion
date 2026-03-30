@@ -1,4 +1,5 @@
 import { StyleSheet,View,SafeAreaView,TouchableOpacity,ScrollView,StatusBar,Platform  } from 'react-native'
+import React from 'react';
 
 export default function PerfilPaciente({ route, navigation }) {
 // Recibe los datos del paciente desde la pantalla anterior

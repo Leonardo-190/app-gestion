@@ -1,5 +1,10 @@
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView,KeyboardAvoidingView, Platform, Alert, StatusBar, SafeAreaViewComponent } from 'react-native'
+import React from 'react';
+
 export default function Inicio({ navigation }) { //Manejo de estados de punto React Hooks
+
+
+
 const [email, setEmail] = React.useState('');
 const [password, setPassword] = React.useState('');
 
@@ -22,7 +27,7 @@ return (
         <View style={styles.inner}>
           {/* Header con Jerarquía Visual */}
           <View style={styles.headerContainer}>
-            <Text style={styles.brandTitle}>GEAR Medical</Text>
+            <Text style={styles.brandTitle}> Medical Care</Text>
             <Text style={styles.welcomeText}>Bienvenido de nuevo</Text>
           </View>
 
@@ -67,7 +72,7 @@ return (
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 GEAR Systems</Text>
+            <Text style={styles.footerText}>© 2026 UPQ TIID</Text>
           </View>
         </View>
       </KeyboardAvoidingView>
