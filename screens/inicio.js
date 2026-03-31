@@ -1,43 +1,52 @@
 import React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert, KeyboardAvoidingView, Platform, SafeAreaView,
+  StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View
+} from 'react-native';
+//  Importacion del hook del tema
+import { useTheme } from '../Themecontext';
 
-export default function Inicio({ navigation }) { //Manejo de estados de punto React Hooks
+export default function Inicio({ navigation }) {
+  //  Extraemos los colores y el estado del tema global
+  const { colors, isDarkMode } = useTheme();
 
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
 
-
-const [email, setEmail] = React.useState('');
-const [password, setPassword] = React.useState('');
-
-//Funcion que valida los botones
-const handleLogin = () => {
+  const handleLogin = () => {
     if (!email || !password) {
-        Alert.alert('Error', 'Por favor, complete todos los campos');
-        return;
+      Alert.alert('Error', 'Por favor, complete todos los campos');
+      return;
     }
-    // si pasa la navegacion avanza a la siguiente pantalla
-    navigation.navigate('Lista de Pacientes');
-};
-return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    
+    navigation.navigate('ListaPacientes'); 
+  };
+
+  return (
+    //  Fondo dinámico 
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
         <View style={styles.inner}>
-          {/* Header con Jerarquía Visual */}
           <View style={styles.headerContainer}>
-            <Text style={styles.brandTitle}> Medical Care</Text>
-            <Text style={styles.welcomeText}>Bienvenido de nuevo</Text>
+            <Text style={[styles.brandTitle, { color: colors.primary }]}>Medical Care</Text>
+            <Text style={[styles.welcomeText, { color: colors.text }]}>Bienvenido de nuevo</Text>
           </View>
 
-          {/* Formulario con Accesibilidad */}
           <View style={styles.formContainer}>
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Correo Electrónico</Text>
+              <Text style={[styles.label, { color: colors.subtext }]}>Correo Electrónico</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: colors.card, 
+                  color: colors.text, 
+                  borderColor: colors.border 
+                }]}
                 placeholder="ejemplo@correo.com"
+                placeholderTextColor={isDarkMode ? "#666" : "#A1A1A1"}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -46,28 +55,31 @@ return (
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Contraseña</Text>
+              <Text style={[styles.label, { color: colors.subtext }]}>Contraseña</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: colors.card, 
+                  color: colors.text, 
+                  borderColor: colors.border 
+                }]}
                 placeholder="********"
+                placeholderTextColor={isDarkMode ? "#666" : "#A1A1A1"}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={true}
               />
             </View>
 
-            {/* Botón Principal (Feedback Visual) */}
             <TouchableOpacity 
-              style={styles.loginButton} 
+              style={[styles.loginButton, { backgroundColor: colors.primary }]} 
               onPress={handleLogin}
               activeOpacity={0.7}
             >
               <Text style={styles.loginButtonText}>Ingresar al Sistema</Text>
             </TouchableOpacity>
 
-            {/* Navegación Secundaria */}
             <TouchableOpacity style={styles.forgotButton}>
-              <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+              <Text style={[styles.forgotText, { color: colors.primary }]}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
           </View>
 
@@ -83,8 +95,6 @@ return (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    // Solución al SafeArea en Android
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   flex: { flex: 1 },
@@ -100,13 +110,11 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
     letterSpacing: 2,
   },
   welcomeText: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#333',
     marginTop: 10,
   },
   formContainer: {
@@ -117,29 +125,25 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
     fontWeight: '500',
   },
   input: {
-    backgroundColor: '#F2F2F7',
     borderRadius: 12,
     padding: 15,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
   },
   loginButton: {
-    backgroundColor: '#007AFF',
     borderRadius: 12,
     padding: 18,
     alignItems: 'center',
     marginTop: 15,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
-    elevation: 5,
   },
   loginButtonText: {
     color: '#FFF',
@@ -151,7 +155,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   forgotText: {
-    color: '#007AFF',
     fontSize: 14,
   },
   footer: {
