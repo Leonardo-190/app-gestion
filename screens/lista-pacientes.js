@@ -1,6 +1,5 @@
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, SafeAreaView, StatusBar, Platform, Image } from 'react-native'
-import { useState } from 'react'
-import React from 'react';
+import { useState } from 'react';
+import { FlatList, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const PACIENTES_DATA = [
   { id: '1', nombre: 'Martina Zuniga', edad: 28, diagnostico: 'Control General' },

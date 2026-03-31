@@ -1,5 +1,4 @@
-import React from 'react';
-import { StyleSheet, View,Text,FlatList, SafeAreaView } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 export default function Citas() {
   const isDarkMode = false; // funcion de modo oscuro

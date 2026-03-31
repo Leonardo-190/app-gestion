@@ -1,5 +1,5 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, SafeAreaView,KeyboardAvoidingView, Platform, Alert, StatusBar, SafeAreaViewComponent } from 'react-native'
 import React from 'react';
+import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Inicio({ navigation }) { //Manejo de estados de punto React Hooks
 
