@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { CommonActions } from '@react-navigation/native';
+import { resetTo } from '../navigationRef';
 import { usePatients } from '../context/PatientsContext';
 import { useTheme } from '../Themecontext';
 
 export default function Ajustes({ navigation }) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
-  const { patients, updatePatient, deletePatient, adminProfile, setAdminProfile } = usePatients();
+  const { patients, updatePatient, deletePatient, adminProfile, setAdminProfile, logout } = usePatients();
   const [userName, setUserName] = useState('Dr. Admin');
   const [userEmail, setUserEmail] = useState('admin@ejemplo.com');
 
@@ -47,10 +49,18 @@ export default function Ajustes({ navigation }) {
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Deseas cerrar sesión?', [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Cerrar sesión', style: 'destructive', onPress: () => {
-        // Resetea el perfil de admin y vuelve a Inicio
-        setAdminProfile({ name: '', email: '' });
-        navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] });
+        { text: 'Cerrar sesión', style: 'destructive', onPress: async () => {
+        // Ejecuta logout persistente y resetea la navegación en el stack raíz
+        try {
+          await logout();
+        } catch (e) {
+          console.warn('Error during logout', e);
+        }
+        try {
+          resetTo('Inicio');
+        } catch (err) {
+          try { navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Inicio' }] })); } catch (e) { navigation.navigate('Inicio'); }
+        }
       } }
     ]);
   };
@@ -63,7 +73,7 @@ export default function Ajustes({ navigation }) {
         <Text style={[styles.title, { color: colors.text }]}>Configuración</Text>
       </View>
 
-      <View style={styles.content}>
+      <View style={[styles.content, { flex: 1 }] }>
         <View style={[styles.optionItem, { backgroundColor: colors.card, borderColor: colors.border }] }>
           <Text style={[styles.optionText, { color: colors.text }]}>Modo Oscuro</Text>
           <Switch
@@ -85,9 +95,10 @@ export default function Ajustes({ navigation }) {
         </View>
 
         {/* Gestión de pacientes */}
-        <View style={[styles.section, { backgroundColor: 'transparent' }] }>
+        <View style={[styles.section, { backgroundColor: 'transparent', flex: 1 } ]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Gestionar Pacientes</Text>
           <FlatList
+            style={{ flex: 1 }}
             data={patients}
             keyExtractor={i => i.id}
             renderItem={({ item }) => (

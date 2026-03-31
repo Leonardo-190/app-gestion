@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
-    Alert,
-    Modal,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../Themecontext';
 import { usePatients } from '../context/PatientsContext';
 
@@ -25,18 +25,27 @@ export default function PerfilPaciente({ route, navigation }) {
 
   const [notes, setNotes] = useState(storedPatient.notas || []);
   const [vitals, setVitals] = useState(storedPatient.signos || []);
+  const [appointments, setAppointments] = useState(storedPatient.citas || []);
   const [modalVisible, setModalVisible] = useState(false);
   const [noteFields, setNoteFields] = useState([{ label: '', value: '' }]);
   const [vitalsModalVisible, setVitalsModalVisible] = useState(false);
   const [weight, setWeight] = useState('');
   const [pressure, setPressure] = useState('');
+  const [apptModalVisible, setApptModalVisible] = useState(false);
+  const [apptDate, setApptDate] = useState('');
+  const [apptTime, setApptTime] = useState('');
+  const [apptReason, setApptReason] = useState('');
+  const [apptStatus, setApptStatus] = useState('Pendiente');
 
   // sincronizar si el paciente cambia en el contexto
   useEffect(() => {
     const p = getPatient(paciente.id);
     if (p) setNotes(p.notas || []);
     if (p) setVitals(p.signos || []);
+    if (p) setAppointments(p.citas || []);
   }, [paciente.id]);
+
+  const ModalComponent = typeof Modal !== 'undefined' ? Modal : View;
 
   const addField = () => setNoteFields((s) => [...s, { label: '', value: '' }]);
   const removeField = (index) => setNoteFields((s) => s.filter((_, i) => i !== index));
@@ -49,7 +58,6 @@ export default function PerfilPaciente({ route, navigation }) {
   };
 
   const saveVital = () => {
-    // simple validation
     if (!weight && !pressure) {
       Alert.alert('Campos vacíos', 'Ingresa al menos peso o presión');
       return;
@@ -91,6 +99,45 @@ export default function PerfilPaciente({ route, navigation }) {
 
     setNoteFields([{ label: '', value: '' }]);
     setModalVisible(false);
+  };
+
+  const saveAppointment = () => {
+    if (!apptDate && !apptTime && !apptReason) {
+      Alert.alert('Campos vacíos', 'Ingresa fecha/hora o motivo de la cita');
+      return;
+    }
+    const appt = { id: Date.now().toString(), date: apptDate || new Date().toISOString(), time: apptTime, motivo: apptReason, estado: apptStatus };
+    const updatedAppointments = [appt, ...appointments];
+    setAppointments(updatedAppointments);
+
+    const updatedPatient = { ...storedPatient, citas: updatedAppointments };
+    try {
+      // usar la función del contexto
+      // addAppointment guarda en el contexto y AsyncStorage también
+      if (typeof updatePatient === 'function') {
+        updatePatient(updatedPatient);
+      }
+    } catch (e) {
+      console.warn('Error al guardar cita', e);
+    }
+
+    setApptDate(''); setApptTime(''); setApptReason(''); setApptStatus('Pendiente');
+    setApptModalVisible(false);
+  };
+
+  const removeAppointment = (id) => {
+    Alert.alert('Eliminar cita', '¿Seguro que deseas eliminar esta cita?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: () => {
+          const updated = appointments.filter(a => a.id !== id);
+          setAppointments(updated);
+          try {
+            const updatedPatient = { ...storedPatient, citas: updated };
+            if (typeof updatePatient === 'function') updatePatient(updatedPatient);
+          } catch (e) { console.warn('Error al eliminar cita', e); }
+        }
+      }
+    ]);
   };
 
   return (
@@ -158,11 +205,35 @@ export default function PerfilPaciente({ route, navigation }) {
           ))}
         </View>
 
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Citas</Text>
+
+          {appointments.length === 0 && (
+            <Text style={[styles.historyDesc, { color: colors.subtext, marginTop: 8 }]}>No hay citas registradas.</Text>
+          )}
+
+          {appointments.map((c) => (
+            <View key={c.id} style={[styles.historyItem, { backgroundColor: colors.card }] }>
+              <Text style={[styles.historyDate, { color: colors.primary }]}>{c.date} {c.time ? `- ${c.time}` : ''}</Text>
+              <Text style={[styles.historyDesc, { color: colors.subtext }]}>{c.motivo}</Text>
+              <Text style={[styles.historyDesc, { color: colors.subtext }]}>Estado: {c.estado}</Text>
+              <TouchableOpacity onPress={() => removeAppointment(c.id)} style={{ marginTop: 8 }}>
+                <Text style={{ color: '#FF3B30' }}>Eliminar cita</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.primary }]} onPress={() => setApptModalVisible(true)}>
+            <Text style={[styles.actionButtonText, { color: '#fff' }]}>Agregar Cita</Text>
+          </TouchableOpacity>
+
+        </View>
+
         <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.primary }]} onPress={() => setModalVisible(true)}>
           <Text style={[styles.actionButtonText, { color: '#fff' }]}>Nueva Nota Médica</Text>
         </TouchableOpacity>
 
-        <Modal visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
+        <ModalComponent visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
           <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
             <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
             <View style={[styles.header, { backgroundColor: colors.card }] }>
@@ -205,9 +276,9 @@ export default function PerfilPaciente({ route, navigation }) {
               </TouchableOpacity>
             </ScrollView>
           </SafeAreaView>
-        </Modal>
+        </ModalComponent>
 
-        <Modal visible={vitalsModalVisible} animationType="slide" onRequestClose={() => setVitalsModalVisible(false)}>
+        <ModalComponent visible={vitalsModalVisible} animationType="slide" onRequestClose={() => setVitalsModalVisible(false)}>
           <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
             <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
             <View style={[styles.header, { backgroundColor: colors.card }] }>
@@ -240,7 +311,57 @@ export default function PerfilPaciente({ route, navigation }) {
               </TouchableOpacity>
             </ScrollView>
           </SafeAreaView>
-        </Modal>
+        </ModalComponent>
+
+        <ModalComponent visible={apptModalVisible} animationType="slide" onRequestClose={() => setApptModalVisible(false)}>
+          <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+            <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+            <View style={[styles.header, { backgroundColor: colors.card }] }>
+              <TouchableOpacity onPress={() => setApptModalVisible(false)} style={styles.backButton}>
+                <Text style={[styles.backText, { color: colors.primary }]}>✕ Cerrar</Text>
+              </TouchableOpacity>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Nueva Cita</Text>
+            </View>
+
+            <ScrollView contentContainerStyle={{ padding: 20 }}>
+              <TextInput
+                placeholder="Fecha (YYYY-MM-DD)"
+                placeholderTextColor={colors.subtext}
+                value={apptDate}
+                onChangeText={setApptDate}
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              />
+
+              <TextInput
+                placeholder="Hora (HH:MM)"
+                placeholderTextColor={colors.subtext}
+                value={apptTime}
+                onChangeText={setApptTime}
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              />
+
+              <TextInput
+                placeholder="Motivo"
+                placeholderTextColor={colors.subtext}
+                value={apptReason}
+                onChangeText={setApptReason}
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              />
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginVertical: 10 }}>
+                {['Pendiente','Completada','Cancelada'].map(s => (
+                  <TouchableOpacity key={s} onPress={() => setApptStatus(s)} style={{ padding: 10, borderRadius: 8, backgroundColor: apptStatus === s ? colors.primary : colors.border }}>
+                    <Text style={{ color: apptStatus === s ? '#fff' : colors.subtext }}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity onPress={saveAppointment} style={[styles.actionButton, { backgroundColor: colors.primary }]}> 
+                <Text style={[styles.actionButtonText, { color: '#fff' }]}>Guardar Cita</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </SafeAreaView>
+        </ModalComponent>
 
       </ScrollView>
     </SafeAreaView>

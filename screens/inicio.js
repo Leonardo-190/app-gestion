@@ -6,6 +6,7 @@ import {
 //  Importacion del hook del tema
 import { useTheme } from '../Themecontext';
 import { usePatients } from '../context/PatientsContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Inicio({ navigation }) {
   //  Extraemos los colores y el estado del tema global
@@ -19,7 +20,7 @@ export default function Inicio({ navigation }) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleLogin = () => {
-    // reset errors
+    
     setEmailError('');
     setPasswordError('');
 
@@ -27,7 +28,7 @@ export default function Inicio({ navigation }) {
       setEmailError('El correo es requerido');
       return;
     }
-    // simple email format validation
+    
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailError('Formato de correo inválido');
@@ -39,14 +40,18 @@ export default function Inicio({ navigation }) {
     }
     // Guardar datos de perfil del admin para que persistan y se muestren en Ajustes
     try {
-      setAdminProfile({ name: email.split('@')[0] || 'Admin', email });
+      const profile = { name: email.split('@')[0] || 'Admin', email };
+      setAdminProfile(profile);
+      
+      AsyncStorage.setItem('@AppGestion:adminProfile', JSON.stringify(profile)).catch(() => {});
     } catch (e) {
       console.warn('No se pudo guardar perfil admin', e);
     }
 
     navigation.reset({
       index: 0,
-      routes: [{ name: 'ListaPacientes' }],
+     
+      routes: [{ name: 'Main' }],
     });
   };
 
@@ -100,7 +105,7 @@ export default function Inicio({ navigation }) {
               {passwordError ? <Text style={{ color: '#FF4D4F', marginTop: 6 }}>{passwordError}</Text> : null}
             </View>
 
-            {/** disable button when form invalid */}
+            
             <TouchableOpacity 
               style={[styles.loginButton, { backgroundColor: colors.primary, opacity: (email && password && emailRegex.test(email)) ? 1 : 0.6 }]} 
               onPress={handleLogin}
@@ -110,7 +115,18 @@ export default function Inicio({ navigation }) {
               <Text style={styles.loginButtonText}>Ingresar al Sistema</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.forgotButton}>
+            <TouchableOpacity style={styles.forgotButton} onPress={() => {
+              if (!email) {
+                Alert.alert('Recuperar contraseña', 'Por favor ingresa tu correo en el campo para recibir instrucciones.');
+                return;
+              }
+              if (!emailRegex.test(email)) {
+                Alert.alert('Correo inválido', 'El correo ingresado no tiene un formato válido.');
+                return;
+              }
+              // simulación de envío
+              Alert.alert('Recuperar contraseña', `Se ha enviado un enlace de recuperación a ${email}.`);
+            }}>
               <Text style={[styles.forgotText, { color: colors.primary }]}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
           </View>
@@ -120,6 +136,7 @@ export default function Inicio({ navigation }) {
           </View>
         </View>
       </KeyboardAvoidingView>
+      {/* "Olvidaste tu contraseña" manejado con Alert en el botón; bloque obsoleto eliminado */}
     </SafeAreaView>
   );
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
+import { resetTo } from '../navigationRef';
 import { useTheme } from '../Themecontext';
 import { usePatients } from '../context/PatientsContext';
 
@@ -15,6 +17,21 @@ export default function ListaPacientes({ navigation }) {
   // Función de la busqueda
   const handleSearch = (text) => {
     setSearch(text);
+  };
+
+  // Obtener el navigator raíz (sube hasta donde no haya más padres)
+  const getRootNav = (nav) => {
+    try {
+      let current = nav;
+      while (current.getParent) {
+        const parent = current.getParent();
+        if (!parent) break;
+        current = parent;
+      }
+      return current;
+    } catch (e) {
+      return nav;
+    }
   };
 
   // Componente de las tarjetas
@@ -47,20 +64,26 @@ export default function ListaPacientes({ navigation }) {
               Alert.alert('Cerrar sesión', '¿Deseas cerrar la sesión?', [
                 { text: 'Cancelar', style: 'cancel' },
                 { text: 'Salir', style: 'destructive', onPress: async () => {
-                  try {
-                    await logout();
-                  } catch (e) {
-                    console.warn('Logout error', e);
+                      try {
+                        await logout();
+                      } catch (e) {
+                        console.warn('Logout error', e);
+                      }
+                      // Use global navigation ref to reliably reset to Inicio
+                      try {
+                        resetTo('Inicio');
+                      } catch (err) {
+                        try { navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: 'Inicio' }] })); } catch (e) { navigation.navigate('Inicio'); }
+                      }
                   }
-                  navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] });
-                } }
+                }
               ]);
             }}
           >
             <Text style={[styles.iconText, { color: colors.text }]}>Salir</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.iconButton, { backgroundColor: colors.card, marginRight: 10 }]} onPress={() => navigation.navigate('Ajustes')}>
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: colors.card, marginRight: 10 }]} onPress={() => navigation.navigate('AjustesTab')}>
             <Text style={[styles.iconText, { color: colors.text }]}>⚙</Text>
           </TouchableOpacity>
 
@@ -83,6 +106,7 @@ export default function ListaPacientes({ navigation }) {
 
       {/* Lista Eficiente (Criterio de Rendimiento: FlatList) */}
       <FlatList
+        style={{ flex: 1 }}
         data={search ? patients.filter(item => item.nombre.toUpperCase().includes(search.toUpperCase())) : patients}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
