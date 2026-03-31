@@ -1,18 +1,12 @@
 import { useState } from 'react';
 import { FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../Themecontext';
+import { usePatients } from '../context/PatientsContext';
 
-const PACIENTES_DATA = [
-  { id: '1', nombre: 'Martina Zuniga', edad: 28, diagnostico: 'Control General' },
-  { id: '2', nombre: 'Emilio Navarro', edad: 45, diagnostico: 'Hipertensión' },
-  { id: '3', nombre: 'Sofía Valdés', edad: 32, diagnostico: 'Seguimiento Post-op' },
-  { id: '4', nombre: 'Ricardo Soto', edad: 50, diagnostico: 'Diabetes Tipo 2' },
-];
 export default function ListaPacientes({ navigation }) {
   const { colors, isDarkMode } = useTheme();
-  const [patients, setPatients] = useState(PACIENTES_DATA);
+  const { patients, addPatient } = usePatients();
   const [search, setSearch] = useState('');
-  const [filteredData, setFilteredData] = useState(PACIENTES_DATA);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newAge, setNewAge] = useState('');
@@ -21,16 +15,6 @@ export default function ListaPacientes({ navigation }) {
   // Función de la busqueda
   const handleSearch = (text) => {
     setSearch(text);
-    if (text) {
-      const newData = patients.filter(item => {
-        const itemData = item.nombre ? item.nombre.toUpperCase() : ''.toUpperCase();
-        const textData = text.toUpperCase();
-        return itemData.indexOf(textData) > -1;
-      });
-      setFilteredData(newData);
-    } else {
-      setFilteredData(patients);
-    }
   };
 
   // Componente de las tarjetas
@@ -60,8 +44,8 @@ export default function ListaPacientes({ navigation }) {
           <TouchableOpacity style={[styles.iconButton, { backgroundColor: colors.card, marginRight: 10 }]} onPress={() => navigation.navigate('Ajustes')}>
             <Text style={[styles.iconText, { color: colors.text }]}>⚙</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
-            <Text style={styles.addButtonText}>+</Text>
+          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => setShowAddModal(true)}>
+            <Text style={[styles.addButtonText, { color: '#FFF' }]}>+</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -69,8 +53,9 @@ export default function ListaPacientes({ navigation }) {
       {/* Buscador (Criterio de UX) */}
       <View style={styles.searchContainer}>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { backgroundColor: isDarkMode ? '#2C2C2E' : '#E9EBEE', color: colors.text, borderColor: colors.border } ]}
           placeholder="Buscar paciente..."
+          placeholderTextColor={colors.subtext}
           value={search}
           onChangeText={(text) => handleSearch(text)}
         />
@@ -78,7 +63,7 @@ export default function ListaPacientes({ navigation }) {
 
       {/* Lista Eficiente (Criterio de Rendimiento: FlatList) */}
       <FlatList
-        data={filteredData}
+        data={search ? patients.filter(item => item.nombre.toUpperCase().includes(search.toUpperCase())) : patients}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
@@ -97,14 +82,12 @@ export default function ListaPacientes({ navigation }) {
             <TextInput placeholder="Diagnóstico" placeholderTextColor={colors.subtext} style={[modalStyles.input, { color: colors.text, borderColor: colors.border }]} value={newDiag} onChangeText={setNewDiag} />
 
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: '#ccc' }]} onPress={() => setShowAddModal(false)}>
-                <Text>Cerrar</Text>
+              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: colors.border }]} onPress={() => setShowAddModal(false)}>
+                <Text style={{ color: colors.text }}>Cerrar</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: '#007AFF' }]} onPress={() => {
+              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: colors.primary }]} onPress={() => {
                 const newPatient = { id: String(Date.now()), nombre: newName || 'Paciente', edad: newAge || 'N/A', diagnostico: newDiag || 'N/A' };
-                const updated = [newPatient, ...patients];
-                setPatients(updated);
-                setFilteredData(updated);
+                addPatient(newPatient);
                 setNewName(''); setNewAge(''); setNewDiag(''); setShowAddModal(false);
               }}>
                 <Text style={{ color: '#fff' }}>Guardar</Text>

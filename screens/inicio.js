@@ -84,7 +84,7 @@ export default function Inicio({ navigation }) {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>© 2026 UPQ TIID</Text>
+            <Text style={[styles.footerText, { color: colors.subtext }]}>© 2026 UPQ TIID</Text>
           </View>
         </View>
       </KeyboardAvoidingView>

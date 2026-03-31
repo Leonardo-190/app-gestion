@@ -1,8 +1,43 @@
-import { Platform, SafeAreaView, StatusBar, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { useState } from 'react';
+import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { usePatients } from '../context/PatientsContext';
 import { useTheme } from '../Themecontext';
 
 export default function Ajustes() {
   const { isDarkMode, toggleTheme, colors } = useTheme();
+  const { patients, updatePatient, deletePatient } = usePatients();
+
+  // Perfil de usuario local (puedes persistir con AsyncStorage si quieres)
+  const [userName, setUserName] = useState('Dr. Admin');
+  const [userEmail, setUserEmail] = useState('admin@ejemplo.com');
+
+  // Edición de paciente
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editAge, setEditAge] = useState('');
+  const [editDiag, setEditDiag] = useState('');
+
+  const openEdit = (p) => {
+    setEditId(p.id);
+    setEditName(String(p.nombre));
+    setEditAge(String(p.edad));
+    setEditDiag(String(p.diagnostico));
+    setShowEditModal(true);
+  };
+
+  const saveEdit = () => {
+    if (!editId) return setShowEditModal(false);
+    updatePatient({ id: editId, nombre: editName, edad: editAge, diagnostico: editDiag });
+    setShowEditModal(false);
+  };
+
+  const confirmDelete = (id) => {
+    Alert.alert('Eliminar paciente', '¿Estás seguro que deseas eliminar este paciente?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: () => deletePatient(id) }
+    ]);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }] }>
@@ -23,10 +58,66 @@ export default function Ajustes() {
           />
         </View>
 
-        <TouchableOpacity style={[styles.logoutButton, { borderColor: '#FF3B30' }]}>
+        {/* Perfil de usuario simple */}
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }] }>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Perfil de Usuario</Text>
+          <TextInput value={userName} onChangeText={setUserName} placeholder="Nombre" placeholderTextColor={colors.subtext} style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.card }]} />
+          <TextInput value={userEmail} onChangeText={setUserEmail} placeholder="Email" placeholderTextColor={colors.subtext} style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.card }]} keyboardType="email-address" />
+          <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={() => Alert.alert('Perfil guardado', 'Los datos del perfil se han actualizado (temporalmente).')}>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Guardar Perfil</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Gestión de pacientes */}
+        <View style={[styles.section, { backgroundColor: 'transparent' }] }>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Gestionar Pacientes</Text>
+          <FlatList
+            data={patients}
+            keyExtractor={i => i.id}
+            renderItem={({ item }) => (
+              <View style={[styles.patientRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <View>
+                  <Text style={{ color: colors.text, fontWeight: '600' }}>{item.nombre}</Text>
+                  <Text style={{ color: colors.subtext }}>{item.edad} años • {item.diagnostico}</Text>
+                </View>
+                <View style={{ flexDirection: 'row' }}>
+                  <TouchableOpacity onPress={() => openEdit(item)} style={[styles.smallBtn, { borderColor: colors.primary }] }>
+                    <Text style={{ color: colors.primary }}>Editar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => confirmDelete(item.id)} style={[styles.smallBtn, { borderColor: '#FF3B30', marginLeft: 8 }]}>
+                    <Text style={{ color: '#FF3B30' }}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          />
+        </View>
+
+        <TouchableOpacity style={[styles.logoutButton, { borderColor: '#FF3B30' }]} onPress={() => Alert.alert('Cerrar sesión', 'Función de cierre de sesión temporal.') }>
           <Text style={[styles.logoutText, { color: isDarkMode ? '#FF6B6B' : '#FF3B30' }]}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Modal editar paciente */}
+      <Modal visible={showEditModal} animationType="slide" transparent={true}>
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.modal, { backgroundColor: colors.card }]}>
+            <Text style={[modalStyles.title, { color: colors.text }]}>Editar Paciente</Text>
+            <TextInput value={editName} onChangeText={setEditName} placeholder="Nombre" placeholderTextColor={colors.subtext} style={[modalStyles.input, { color: colors.text, borderColor: colors.border }]} />
+            <TextInput value={editAge} onChangeText={setEditAge} placeholder="Edad" placeholderTextColor={colors.subtext} style={[modalStyles.input, { color: colors.text, borderColor: colors.border }]} keyboardType="numeric" />
+            <TextInput value={editDiag} onChangeText={setEditDiag} placeholder="Diagnóstico" placeholderTextColor={colors.subtext} style={[modalStyles.input, { color: colors.text, borderColor: colors.border }]} />
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: colors.border }]} onPress={() => setShowEditModal(false)}>
+                <Text style={{ color: colors.text }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: colors.primary }]} onPress={saveEdit}>
+                <Text style={{ color: '#fff' }}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -43,4 +134,19 @@ const styles = StyleSheet.create({
   optionText: { fontSize: 16, fontWeight: '500' },
   logoutButton: { marginTop: 30, padding: 18, borderRadius: 12, alignItems: 'center', borderWidth: 1 },
   logoutText: { fontWeight: 'bold' }
+  ,
+  section: { marginBottom: 16, padding: 12, borderRadius: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 8 },
+  saveButton: { padding: 12, borderRadius: 10, alignItems: 'center', marginTop: 6 },
+  patientRow: { padding: 12, borderRadius: 10, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1 },
+  smallBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 }
+});
+
+const modalStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  modal: { width: '90%', borderRadius: 12, padding: 18 },
+  title: { fontSize: 20, fontWeight: '700', marginBottom: 10 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 10 },
+  btn: { padding: 12, borderRadius: 8, minWidth: 100, alignItems: 'center' }
 });

@@ -4,6 +4,7 @@ import 'react-native-gesture-handler';
 
 
 import { ThemeProvider, useTheme } from './Themecontext';
+import { PatientsProvider } from './context/PatientsContext';
 
 import Ajustes from "./screens/ajustes";
 import Citas from "./screens/citas";
@@ -63,7 +64,9 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <ThemeAwareNavigation />
+      <PatientsProvider>
+        <ThemeAwareNavigation />
+      </PatientsProvider>
     </ThemeProvider>
   );
 }

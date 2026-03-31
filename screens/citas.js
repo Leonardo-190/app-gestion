@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import {
-    FlatList,
-    Platform,
-    SafeAreaView, StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  FlatList,
+  Platform,
+  SafeAreaView, StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 // 1. Importamos el hook del tema
 import { useTheme } from '../Themecontext';
@@ -55,7 +55,7 @@ export default function Citas() {
       
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.text }]}>Mi Agenda</Text>
-        <Text style={styles.dateText}>Lunes, 30 de Marzo</Text>
+        <Text style={[styles.dateText, { color: colors.primary }]}>Lunes, 30 de Marzo</Text>
       </View>
 
       <View style={styles.filterBar}>

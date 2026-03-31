@@ -1,57 +1,59 @@
 import { Platform, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../Themecontext';
 
 export default function PerfilPaciente({ route, navigation }) {
-// Recibe los datos del paciente desde la pantalla anterior
-    const { paciente } = route.params || { paciente: { nombre: 'Paciente Desconocido', edad: 'N/A', diagnostico: 'N/A' } };
+  // Recibe los datos del paciente desde la pantalla anterior
+  const { paciente } = route.params || { paciente: { nombre: 'Paciente Desconocido', edad: 'N/A', diagnostico: 'N/A' } };
+  const { colors, isDarkMode } = useTheme();
 
-   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+
       {/* Header con botón de regreso */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.card }] }>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>← Volver</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>← Volver</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ficha Médica</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Ficha Médica</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Sección de Perfil  */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{paciente.nombre.charAt(0)}</Text>
+        <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }] }>
+          <View style={[styles.avatar, { backgroundColor: isDarkMode ? '#2C2C2E' : '#E1E9FF' }]}>
+            <Text style={[styles.avatarText, { color: colors.primary }]}>{paciente.nombre.charAt(0)}</Text>
           </View>
-          <Text style={styles.name}>{paciente.nombre}</Text>
-          <Text style={styles.details}>{paciente.edad} años • ID: 2026-00{paciente.id}</Text>
+          <Text style={[styles.name, { color: colors.text }]}>{paciente.nombre}</Text>
+          <Text style={[styles.details, { color: colors.subtext }]}>{paciente.edad} años • ID: 2026-00{paciente.id}</Text>
         </View>
 
         {/* Información Clínica */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Diagnóstico Actual</Text>
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>{paciente.diagnostico}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Diagnóstico Actual</Text>
+          <View style={[styles.infoBox, { backgroundColor: colors.card, borderLeftColor: colors.primary }]}>
+            <Text style={[styles.infoText, { color: colors.text }]}>{paciente.diagnostico}</Text>
           </View>
         </View>
 
         {/* Historial  */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Historial de Consultas</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Historial de Consultas</Text>
           
-          <View style={styles.historyItem}>
-            <Text style={styles.historyDate}>15 Mar 2026</Text>
-            <Text style={styles.historyDesc}>Revisión de rutina y ajuste de medicación.</Text>
+          <View style={[styles.historyItem, { backgroundColor: colors.card }] }>
+            <Text style={[styles.historyDate, { color: colors.primary }]}>15 Mar 2026</Text>
+            <Text style={[styles.historyDesc, { color: colors.subtext }]}>Revisión de rutina y ajuste de medicación.</Text>
           </View>
 
-          <View style={styles.historyItem}>
-            <Text style={styles.historyDate}>02 Feb 2026</Text>
-            <Text style={styles.historyDesc}>Reportó fatiga leve. Se solicitaron análisis de sangre.</Text>
+          <View style={[styles.historyItem, { backgroundColor: colors.card }] }>
+            <Text style={[styles.historyDate, { color: colors.primary }]}>02 Feb 2026</Text>
+            <Text style={[styles.historyDesc, { color: colors.subtext }]}>Reportó fatiga leve. Se solicitaron análisis de sangre.</Text>
           </View>
         </View>
 
         {/* Acciones Rápidas */}
-        <TouchableOpacity style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>Nueva Nota Médica</Text>
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.actionButtonText, { color: '#fff' }]}>Nueva Nota Médica</Text>
         </TouchableOpacity>
 
       </ScrollView>
