@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '../Themecontext';
 import { usePatients } from '../context/PatientsContext';
 
 export default function ListaPacientes({ navigation }) {
   const { colors, isDarkMode } = useTheme();
-  const { patients, addPatient } = usePatients();
+  const { patients, addPatient, logout } = usePatients();
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
@@ -41,9 +41,29 @@ export default function ListaPacientes({ navigation }) {
       <View style={[styles.header, { borderBottomColor: colors.border }] }>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Pacientes</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: colors.card, marginRight: 10 }]}
+            onPress={() => {
+              Alert.alert('Cerrar sesión', '¿Deseas cerrar la sesión?', [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: 'Salir', style: 'destructive', onPress: async () => {
+                  try {
+                    await logout();
+                  } catch (e) {
+                    console.warn('Logout error', e);
+                  }
+                  navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] });
+                } }
+              ]);
+            }}
+          >
+            <Text style={[styles.iconText, { color: colors.text }]}>Salir</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={[styles.iconButton, { backgroundColor: colors.card, marginRight: 10 }]} onPress={() => navigation.navigate('Ajustes')}>
             <Text style={[styles.iconText, { color: colors.text }]}>⚙</Text>
           </TouchableOpacity>
+
           <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={() => setShowAddModal(true)}>
             <Text style={[styles.addButtonText, { color: '#FFF' }]}>+</Text>
           </TouchableOpacity>

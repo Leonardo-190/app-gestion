@@ -4,7 +4,7 @@ import 'react-native-gesture-handler';
 
 
 import { ThemeProvider, useTheme } from './Themecontext';
-import { PatientsProvider } from './context/PatientsContext';
+import { PatientsProvider, usePatients } from './context/PatientsContext';
 
 import Ajustes from "./screens/ajustes";
 import Citas from "./screens/citas";
@@ -18,11 +18,17 @@ export default function App() {
   // Creamos un componente interno que consume el tema (porque ThemeProvider está arriba)
   const ThemeAwareNavigation = () => {
     const { colors } = useTheme();
+    const { adminProfile, hydrated } = usePatients();
+
+    // while we restore persisted state, avoid rendering navigation (prevents flicker)
+    if (!hydrated) return null;
+
+    const initialRoute = (adminProfile && adminProfile.email) ? 'ListaPacientes' : 'Inicio';
 
     return (
       <NavigationContainer>
         <Stack.Navigator 
-          initialRouteName="Inicio"
+          initialRouteName={initialRoute}
           screenOptions={{
             headerStyle: { backgroundColor: colors.card }, 
             headerTintColor: colors.primary,

@@ -13,11 +13,28 @@ export default function Inicio({ navigation }) {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [emailError, setEmailError] = React.useState('');
+  const [passwordError, setPasswordError] = React.useState('');
   const { setAdminProfile } = usePatients();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Por favor, complete todos los campos');
+    // reset errors
+    setEmailError('');
+    setPasswordError('');
+
+    if (!email) {
+      setEmailError('El correo es requerido');
+      return;
+    }
+    // simple email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Formato de correo inválido');
+      return;
+    }
+    if (!password) {
+      setPasswordError('La contraseña es requerida');
       return;
     }
     // Guardar datos de perfil del admin para que persistan y se muestren en Ajustes
@@ -27,7 +44,10 @@ export default function Inicio({ navigation }) {
       console.warn('No se pudo guardar perfil admin', e);
     }
 
-    navigation.navigate('ListaPacientes');
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'ListaPacientes' }],
+    });
   };
 
   return (
@@ -60,6 +80,7 @@ export default function Inicio({ navigation }) {
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
+              {emailError ? <Text style={{ color: '#FF4D4F', marginTop: 6 }}>{emailError}</Text> : null}
             </View>
 
             <View style={styles.inputWrapper}>
@@ -76,12 +97,15 @@ export default function Inicio({ navigation }) {
                 onChangeText={setPassword}
                 secureTextEntry={true}
               />
+              {passwordError ? <Text style={{ color: '#FF4D4F', marginTop: 6 }}>{passwordError}</Text> : null}
             </View>
 
+            {/** disable button when form invalid */}
             <TouchableOpacity 
-              style={[styles.loginButton, { backgroundColor: colors.primary }]} 
+              style={[styles.loginButton, { backgroundColor: colors.primary, opacity: (email && password && emailRegex.test(email)) ? 1 : 0.6 }]} 
               onPress={handleLogin}
               activeOpacity={0.7}
+              disabled={!(email && password && emailRegex.test(email))}
             >
               <Text style={styles.loginButtonText}>Ingresar al Sistema</Text>
             </TouchableOpacity>

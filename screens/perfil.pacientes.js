@@ -24,13 +24,18 @@ export default function PerfilPaciente({ route, navigation }) {
   const storedPatient = getPatient(paciente.id) || paciente;
 
   const [notes, setNotes] = useState(storedPatient.notas || []);
+  const [vitals, setVitals] = useState(storedPatient.signos || []);
   const [modalVisible, setModalVisible] = useState(false);
   const [noteFields, setNoteFields] = useState([{ label: '', value: '' }]);
+  const [vitalsModalVisible, setVitalsModalVisible] = useState(false);
+  const [weight, setWeight] = useState('');
+  const [pressure, setPressure] = useState('');
 
   // sincronizar si el paciente cambia en el contexto
   useEffect(() => {
     const p = getPatient(paciente.id);
     if (p) setNotes(p.notas || []);
+    if (p) setVitals(p.signos || []);
   }, [paciente.id]);
 
   const addField = () => setNoteFields((s) => [...s, { label: '', value: '' }]);
@@ -41,6 +46,29 @@ export default function PerfilPaciente({ route, navigation }) {
       copy[index] = { ...copy[index], [key]: text };
       return copy;
     });
+  };
+
+  const saveVital = () => {
+    // simple validation
+    if (!weight && !pressure) {
+      Alert.alert('Campos vacíos', 'Ingresa al menos peso o presión');
+      return;
+    }
+
+    const newVital = { id: Date.now().toString(), date: new Date().toISOString(), peso: weight, presion: pressure };
+    const updatedVitals = [newVital, ...vitals];
+    setVitals(updatedVitals);
+
+    const updatedPatient = { ...storedPatient, signos: updatedVitals };
+    try {
+      updatePatient(updatedPatient);
+    } catch (e) {
+      console.warn('Error al guardar signos del paciente', e);
+    }
+
+    setWeight('');
+    setPressure('');
+    setVitalsModalVisible(false);
   };
 
   const saveNote = () => {
@@ -90,6 +118,27 @@ export default function PerfilPaciente({ route, navigation }) {
           <View style={[styles.infoBox, { backgroundColor: colors.card, borderLeftColor: colors.primary }]}> 
             <Text style={[styles.infoText, { color: colors.text }]}>{paciente.diagnostico}</Text>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Signos Vitales</Text>
+
+          {vitals.length === 0 && (
+            <Text style={[styles.historyDesc, { color: colors.subtext, marginTop: 8 }]}>No hay registros de signos vitales.</Text>
+          )}
+
+          {vitals.map((v) => (
+            <View key={v.id} style={[styles.historyItem, { backgroundColor: colors.card }] }>
+              <Text style={[styles.historyDate, { color: colors.primary }]}>{new Date(v.date).toLocaleString()}</Text>
+              {v.peso ? <Text style={[styles.historyDesc, { color: colors.subtext }]}>Peso: {v.peso} kg</Text> : null}
+              {v.presion ? <Text style={[styles.historyDesc, { color: colors.subtext }]}>Presión: {v.presion}</Text> : null}
+            </View>
+          ))}
+
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.primary }]} onPress={() => setVitalsModalVisible(true)}>
+            <Text style={[styles.actionButtonText, { color: '#fff' }]}>Agregar Signos Vitales</Text>
+          </TouchableOpacity>
+
         </View>
 
         <View style={styles.section}>
@@ -153,6 +202,41 @@ export default function PerfilPaciente({ route, navigation }) {
 
               <TouchableOpacity onPress={saveNote} style={[styles.actionButton, { backgroundColor: colors.primary }]}> 
                 <Text style={[styles.actionButtonText, { color: '#fff' }]}>Guardar Nota</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </SafeAreaView>
+        </Modal>
+
+        <Modal visible={vitalsModalVisible} animationType="slide" onRequestClose={() => setVitalsModalVisible(false)}>
+          <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}> 
+            <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+            <View style={[styles.header, { backgroundColor: colors.card }] }>
+              <TouchableOpacity onPress={() => setVitalsModalVisible(false)} style={styles.backButton}>
+                <Text style={[styles.backText, { color: colors.primary }]}>✕ Cerrar</Text>
+              </TouchableOpacity>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>Agregar Signos Vitales</Text>
+            </View>
+
+            <ScrollView contentContainerStyle={{ padding: 20 }}>
+              <TextInput
+                placeholder="Peso (kg)"
+                placeholderTextColor={colors.subtext}
+                value={weight}
+                onChangeText={setWeight}
+                keyboardType="numeric"
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              />
+
+              <TextInput
+                placeholder="Presión arterial (ej. 120/80)"
+                placeholderTextColor={colors.subtext}
+                value={pressure}
+                onChangeText={setPressure}
+                style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+              />
+
+              <TouchableOpacity onPress={saveVital} style={[styles.actionButton, { backgroundColor: colors.primary }]}> 
+                <Text style={[styles.actionButtonText, { color: '#fff' }]}>Guardar Signos</Text>
               </TouchableOpacity>
             </ScrollView>
           </SafeAreaView>

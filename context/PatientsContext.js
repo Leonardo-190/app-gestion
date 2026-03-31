@@ -15,7 +15,8 @@ const ADMIN_KEY = '@AppGestion:adminProfile';
 
 export const PatientsProvider = ({ children }) => {
   const [patients, setPatients] = useState(INITIAL);
-  const [adminProfile, setAdminProfile] = useState({ name: 'Dr. Admin', email: 'admin@ejemplo.com' });
+  const [adminProfile, setAdminProfile] = useState({ name: '', email: '' });
+  const [hydrated, setHydrated] = useState(false);
 
 
   useEffect(() => {
@@ -26,8 +27,12 @@ export const PatientsProvider = ({ children }) => {
 
         const a = await AsyncStorage.getItem(ADMIN_KEY);
         if (a) setAdminProfile(JSON.parse(a));
+        
+        // marcar como cargado (hydrated) después de intentar restaurar
+        setHydrated(true);
       } catch (e) {
-        console.warn('Error loading persisted data', e);
+        console.warn('Error al cargar datos persistidos', e);
+        setHydrated(true);
       }
     })();
   }, []);
@@ -38,7 +43,7 @@ export const PatientsProvider = ({ children }) => {
       try {
         await AsyncStorage.setItem(PATIENTS_KEY, JSON.stringify(patients));
       } catch (e) {
-        console.warn('Error saving patients', e);
+        console.warn('Error al guardar pacientes', e);
       }
     })();
   }, [patients]);
@@ -49,7 +54,7 @@ export const PatientsProvider = ({ children }) => {
       try {
         await AsyncStorage.setItem(ADMIN_KEY, JSON.stringify(adminProfile));
       } catch (e) {
-        console.warn('Error saving admin profile', e);
+        console.warn('Error al guardar perfil admin', e);
       }
     })();
   }, [adminProfile]);
@@ -68,8 +73,17 @@ export const PatientsProvider = ({ children }) => {
 
   const getPatient = (id) => patients.find(p => p.id === id);
 
+  const logout = async () => {
+    try {
+      setAdminProfile({ name: '', email: '' });
+      await AsyncStorage.removeItem(ADMIN_KEY);
+    } catch (e) {
+      console.warn('Error durante el cierre de sesión', e);
+    }
+  };
+
   return (
-    <PatientsContext.Provider value={{ patients, addPatient, deletePatient, updatePatient, getPatient, adminProfile, setAdminProfile }}>
+    <PatientsContext.Provider value={{ patients, addPatient, deletePatient, updatePatient, getPatient, adminProfile, setAdminProfile, logout, hydrated }}>
       {children}
     </PatientsContext.Provider>
   );
