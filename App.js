@@ -9,7 +9,7 @@ import Ajustes from "./screens/ajustes";
 import Citas from "./screens/citas";
 import Inicio from "./screens/inicio";
 import ListaPacientes from "./screens/lista-pacientes";
-import PerfilPacientes from "./screens/perfil.pacientes";
+import PerfilPaciente from "./screens/perfil.pacientes";
 
 const Stack = createStackNavigator();
 
@@ -41,7 +41,7 @@ export default function App() {
 
           <Stack.Screen 
             name="PerfilPaciente" 
-            component={PerfilPacientes} 
+            component={PerfilPaciente} 
             options={{ title: 'Perfil del Paciente' }} 
           />
 

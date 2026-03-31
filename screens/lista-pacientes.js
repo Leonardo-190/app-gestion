@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FlatList, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useTheme } from '../Themecontext';
 
 const PACIENTES_DATA = [
   { id: '1', nombre: 'Martina Zuniga', edad: 28, diagnostico: 'Control General' },
@@ -8,50 +9,61 @@ const PACIENTES_DATA = [
   { id: '4', nombre: 'Ricardo Soto', edad: 50, diagnostico: 'Diabetes Tipo 2' },
 ];
 export default function ListaPacientes({ navigation }) {
+  const { colors, isDarkMode } = useTheme();
+  const [patients, setPatients] = useState(PACIENTES_DATA);
   const [search, setSearch] = useState('');
   const [filteredData, setFilteredData] = useState(PACIENTES_DATA);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newAge, setNewAge] = useState('');
+  const [newDiag, setNewDiag] = useState('');
 
   // Función de la busqueda
   const handleSearch = (text) => {
     setSearch(text);
     if (text) {
-      const newData = PACIENTES_DATA.filter(item => {
+      const newData = patients.filter(item => {
         const itemData = item.nombre ? item.nombre.toUpperCase() : ''.toUpperCase();
         const textData = text.toUpperCase();
         return itemData.indexOf(textData) > -1;
       });
       setFilteredData(newData);
     } else {
-      setFilteredData(PACIENTES_DATA);
+      setFilteredData(patients);
     }
   };
 
   // Componente de las tarjetas
   const renderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: colors.card }]}
       onPress={() => navigation.navigate('PerfilPaciente', { paciente: item })}
     >
       <View style={styles.cardInfo}>
-        <Text style={styles.patientName}>{item.nombre}</Text>
-        <Text style={styles.patientSub}>{item.edad} años • {item.diagnostico}</Text>
+        <Text style={[styles.patientName, { color: colors.text }]}>{item.nombre}</Text>
+        <Text style={[styles.patientSub, { color: colors.subtext }]}>{item.edad} años • {item.diagnostico}</Text>
       </View>
       <View style={styles.arrowContainer}>
-        <Text style={styles.arrow}>〉</Text>
+        <Text style={[styles.arrow, { color: colors.border }]}>〉</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       {/* Cabecera */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Pacientes</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>+</Text>
-        </TouchableOpacity>
+      <View style={[styles.header, { borderBottomColor: colors.border }] }>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Pacientes</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: colors.card, marginRight: 10 }]} onPress={() => navigation.navigate('Ajustes')}>
+            <Text style={[styles.iconText, { color: colors.text }]}>⚙</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Buscador (Criterio de UX) */}
@@ -71,9 +83,36 @@ export default function ListaPacientes({ navigation }) {
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No se encontraron pacientes.</Text>
+          <Text style={[styles.emptyText, { color: colors.subtext }]}>No se encontraron pacientes.</Text>
         }
       />
+
+      {/* Modal para añadir paciente (local) */}
+      <Modal visible={showAddModal} animationType="slide" transparent={true}>
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.modal, { backgroundColor: colors.card }] }>
+            <Text style={[modalStyles.modalTitle, { color: colors.text }]}>Añadir Paciente</Text>
+            <TextInput placeholder="Nombre" placeholderTextColor={colors.subtext} style={[modalStyles.input, { color: colors.text, borderColor: colors.border }]} value={newName} onChangeText={setNewName} />
+            <TextInput placeholder="Edad" placeholderTextColor={colors.subtext} style={[modalStyles.input, { color: colors.text, borderColor: colors.border }]} value={newAge} onChangeText={setNewAge} keyboardType="numeric" />
+            <TextInput placeholder="Diagnóstico" placeholderTextColor={colors.subtext} style={[modalStyles.input, { color: colors.text, borderColor: colors.border }]} value={newDiag} onChangeText={setNewDiag} />
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: '#ccc' }]} onPress={() => setShowAddModal(false)}>
+                <Text>Cerrar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[modalStyles.btn, { backgroundColor: '#007AFF' }]} onPress={() => {
+                const newPatient = { id: String(Date.now()), nombre: newName || 'Paciente', edad: newAge || 'N/A', diagnostico: newDiag || 'N/A' };
+                const updated = [newPatient, ...patients];
+                setPatients(updated);
+                setFilteredData(updated);
+                setNewName(''); setNewAge(''); setNewDiag(''); setShowAddModal(false);
+              }}>
+                <Text style={{ color: '#fff' }}>Guardar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -89,6 +128,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
+    borderBottomWidth: 1,
   },
   headerTitle: {
     fontSize: 28,
@@ -162,3 +202,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   }
 });
+
+const modalStyles = StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  modal: { width: '90%', borderRadius: 12, padding: 18 },
+  modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 10 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 10 },
+  btn: { padding: 12, borderRadius: 8, minWidth: 100, alignItems: 'center' }
+});
+
+// estilos de iconos pequeños
+styles.iconButton = { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' };
+styles.iconText = { fontSize: 18 };
