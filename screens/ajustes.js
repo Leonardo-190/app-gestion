@@ -3,12 +3,9 @@ import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, 
 import { usePatients } from '../context/PatientsContext';
 import { useTheme } from '../Themecontext';
 
-export default function Ajustes() {
+export default function Ajustes({ navigation }) {
   const { isDarkMode, toggleTheme, colors } = useTheme();
-  const { patients, updatePatient, deletePatient } = usePatients();
-
-  // Perfil de usuario desde contexto persistente
-  const { adminProfile, setAdminProfile } = usePatients();
+  const { patients, updatePatient, deletePatient, adminProfile, setAdminProfile } = usePatients();
   const [userName, setUserName] = useState('Dr. Admin');
   const [userEmail, setUserEmail] = useState('admin@ejemplo.com');
 
@@ -44,6 +41,17 @@ export default function Ajustes() {
     Alert.alert('Eliminar paciente', '¿Estás seguro que deseas eliminar este paciente?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Eliminar', style: 'destructive', onPress: () => deletePatient(id) }
+    ]);
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Cerrar sesión', '¿Deseas cerrar sesión?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Cerrar sesión', style: 'destructive', onPress: () => {
+        // Resetea el perfil de admin y vuelve a Inicio
+        setAdminProfile({ name: '', email: '' });
+        navigation.reset({ index: 0, routes: [{ name: 'Inicio' }] });
+      } }
     ]);
   };
 
@@ -101,7 +109,7 @@ export default function Ajustes() {
           />
         </View>
 
-        <TouchableOpacity style={[styles.logoutButton, { borderColor: '#FF3B30' }]} onPress={() => Alert.alert('Cerrar sesión', 'Función de cierre de sesión temporal.') }>
+        <TouchableOpacity style={[styles.logoutButton, { borderColor: '#FF3B30' }]} onPress={handleLogout}>
           <Text style={[styles.logoutText, { color: isDarkMode ? '#FF6B6B' : '#FF3B30' }]}>Cerrar Sesión</Text>
         </TouchableOpacity>
       </View>
