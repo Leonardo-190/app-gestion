@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { usePatients } from '../context/PatientsContext';
 import { useTheme } from '../Themecontext';
@@ -7,9 +7,17 @@ export default function Ajustes() {
   const { isDarkMode, toggleTheme, colors } = useTheme();
   const { patients, updatePatient, deletePatient } = usePatients();
 
-  // Perfil de usuario local (puedes persistir con AsyncStorage si quieres)
+  // Perfil de usuario desde contexto persistente
+  const { adminProfile, setAdminProfile } = usePatients();
   const [userName, setUserName] = useState('Dr. Admin');
   const [userEmail, setUserEmail] = useState('admin@ejemplo.com');
+
+  useEffect(() => {
+    if (adminProfile) {
+      setUserName(adminProfile.name || 'Dr. Admin');
+      setUserEmail(adminProfile.email || 'admin@ejemplo.com');
+    }
+  }, [adminProfile]);
 
   // Edición de paciente
   const [showEditModal, setShowEditModal] = useState(false);
@@ -63,7 +71,7 @@ export default function Ajustes() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Perfil de Usuario</Text>
           <TextInput value={userName} onChangeText={setUserName} placeholder="Nombre" placeholderTextColor={colors.subtext} style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.card }]} />
           <TextInput value={userEmail} onChangeText={setUserEmail} placeholder="Email" placeholderTextColor={colors.subtext} style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.card }]} keyboardType="email-address" />
-          <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={() => Alert.alert('Perfil guardado', 'Los datos del perfil se han actualizado (temporalmente).')}>
+          <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={() => { setAdminProfile({ name: userName, email: userEmail }); Alert.alert('Perfil guardado', 'Los datos del perfil se han actualizado.'); }}>
             <Text style={{ color: '#fff', fontWeight: 'bold' }}>Guardar Perfil</Text>
           </TouchableOpacity>
         </View>

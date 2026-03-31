@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 //  Importacion del hook del tema
 import { useTheme } from '../Themecontext';
+import { usePatients } from '../context/PatientsContext';
 
 export default function Inicio({ navigation }) {
   //  Extraemos los colores y el estado del tema global
@@ -12,14 +13,21 @@ export default function Inicio({ navigation }) {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const { setAdminProfile } = usePatients();
 
   const handleLogin = () => {
     if (!email || !password) {
       Alert.alert('Error', 'Por favor, complete todos los campos');
       return;
     }
-    
-    navigation.navigate('ListaPacientes'); 
+    // Guardar datos de perfil del admin para que persistan y se muestren en Ajustes
+    try {
+      setAdminProfile({ name: email.split('@')[0] || 'Admin', email });
+    } catch (e) {
+      console.warn('No se pudo guardar perfil admin', e);
+    }
+
+    navigation.navigate('ListaPacientes');
   };
 
   return (

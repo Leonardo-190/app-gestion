@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const PatientsContext = createContext();
 
@@ -9,8 +10,49 @@ const INITIAL = [
   { id: '4', nombre: 'Ricardo Soto', edad: 50, diagnostico: 'Diabetes Tipo 2' },
 ];
 
+const PATIENTS_KEY = '@AppGestion:patients';
+const ADMIN_KEY = '@AppGestion:adminProfile';
+
 export const PatientsProvider = ({ children }) => {
   const [patients, setPatients] = useState(INITIAL);
+  const [adminProfile, setAdminProfile] = useState({ name: 'Dr. Admin', email: 'admin@ejemplo.com' });
+
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const p = await AsyncStorage.getItem(PATIENTS_KEY);
+        if (p) setPatients(JSON.parse(p));
+
+        const a = await AsyncStorage.getItem(ADMIN_KEY);
+        if (a) setAdminProfile(JSON.parse(a));
+      } catch (e) {
+        console.warn('Error loading persisted data', e);
+      }
+    })();
+  }, []);
+
+  
+  useEffect(() => {
+    (async () => {
+      try {
+        await AsyncStorage.setItem(PATIENTS_KEY, JSON.stringify(patients));
+      } catch (e) {
+        console.warn('Error saving patients', e);
+      }
+    })();
+  }, [patients]);
+
+  
+  useEffect(() => {
+    (async () => {
+      try {
+        await AsyncStorage.setItem(ADMIN_KEY, JSON.stringify(adminProfile));
+      } catch (e) {
+        console.warn('Error saving admin profile', e);
+      }
+    })();
+  }, [adminProfile]);
 
   const addPatient = (patient) => {
     setPatients(prev => [patient, ...prev]);
@@ -27,7 +69,7 @@ export const PatientsProvider = ({ children }) => {
   const getPatient = (id) => patients.find(p => p.id === id);
 
   return (
-    <PatientsContext.Provider value={{ patients, addPatient, deletePatient, updatePatient, getPatient }}>
+    <PatientsContext.Provider value={{ patients, addPatient, deletePatient, updatePatient, getPatient, adminProfile, setAdminProfile }}>
       {children}
     </PatientsContext.Provider>
   );
