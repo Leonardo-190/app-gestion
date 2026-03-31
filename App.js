@@ -3,7 +3,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import 'react-native-gesture-handler';
 
 
-import { ThemeProvider } from './Themecontext';
+import { ThemeProvider, useTheme } from './Themecontext';
 
 import Ajustes from "./screens/ajustes";
 import Citas from "./screens/citas";
@@ -14,15 +14,17 @@ import PerfilPacientes from "./screens/perfil.pacientes";
 const Stack = createStackNavigator();
 
 export default function App() {
-  return (
-    
-    <ThemeProvider>
+  // Creamos un componente interno que consume el tema (porque ThemeProvider está arriba)
+  const ThemeAwareNavigation = () => {
+    const { colors } = useTheme();
+
+    return (
       <NavigationContainer>
         <Stack.Navigator 
           initialRouteName="Inicio"
           screenOptions={{
-            headerStyle: { backgroundColor: '#f8f9fa' }, 
-            headerTintColor: '#007AFF',
+            headerStyle: { backgroundColor: colors.card }, 
+            headerTintColor: colors.primary,
           }}
         >
           <Stack.Screen 
@@ -38,7 +40,7 @@ export default function App() {
           />
 
           <Stack.Screen 
-            name="PerfilPacientes" 
+            name="PerfilPaciente" 
             component={PerfilPacientes} 
             options={{ title: 'Perfil del Paciente' }} 
           />
@@ -56,6 +58,12 @@ export default function App() {
           />
         </Stack.Navigator>
       </NavigationContainer>
+    );
+  };
+
+  return (
+    <ThemeProvider>
+      <ThemeAwareNavigation />
     </ThemeProvider>
   );
 }
